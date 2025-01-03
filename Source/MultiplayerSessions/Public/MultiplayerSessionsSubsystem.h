@@ -6,21 +6,24 @@
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Interfaces/OnlineSessionInterface.h"
 #include "OnlineSessionSettings.h"
+#include "MultiplayerTypes/OnlineSessionTypes.h"
 
 #include "MultiplayerSessionsSubsystem.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnCreateSessionComplete, bool, bWasSuccessful);
 
-DECLARE_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionComplete,
-                                     const TArray<FOnlineSessionSearchResult>& SearchResults, bool bWasSuccessful);
-DECLARE_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete, EOnJoinSessionCompleteResult::Type Result);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnDestroySessionComplete, bool, bWasSuccessful);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnStartSessionComplete, bool, bWasSuccessful);
 
-/**
- * 
- */
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FMultiplayerOnFindSessionComplete,
+                                             const TArray<FSessionInfo>&, Sessions,
+                                             bool, bWasSuccessful);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FMultiplayerOnJoinSessionComplete,
+                                            ESessionJoinResult, Result);
+
+
 UCLASS()
 class MULTIPLAYERSESSIONS_API UMultiplayerSessionsSubsystem : public UGameInstanceSubsystem
 {
@@ -30,11 +33,30 @@ public:
 	UMultiplayerSessionsSubsystem();
 
 public:
-	void CreateSession(const int32& NumPublicConnections, const FString& MatchType);
+	UFUNCTION(BlueprintCallable)
+	void CreateSession(const FSessionCreateParams& Params);
+
+	UFUNCTION(BlueprintCallable)
 	void FindSessions(const int32& MaxSearchResults);
-	void JoinSession(const FOnlineSessionSearchResult& SessionSearchResult);
+
+	UFUNCTION(BlueprintCallable)
+	void JoinSession(const FString& SessionId);
+
+	UFUNCTION(BlueprintCallable)
 	void StartSession();
+
+	UFUNCTION(BlueprintCallable)
 	void DestroySession();
+
+public:
+	IOnlineSessionPtr GetSessionInterface() const;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	TArray<FSessionInfo> GetLastSessions() const;
+
+private:
+	void JoinSession(const FOnlineSessionSearchResult& SessionSearchResult);
 
 private:
 	/*
@@ -77,7 +99,9 @@ private:
 	TSharedPtr<FOnlineSessionSettings> LastSessionSettings;
 	TSharedPtr<FOnlineSessionSearch> LastSessionSearch;
 
+	TMap<FString, const TArray<FOnlineSessionSearchResult>::TConstIterator> LastSessionSearchResultsMap;
+
 	bool bCreateSessionOnDestroy { false };
-	int32 LastNumPublicConnections;
-	FString LastMatchType;
+
+	FSessionCreateParams LastSessionParams;
 };
