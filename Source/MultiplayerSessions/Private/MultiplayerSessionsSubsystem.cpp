@@ -79,7 +79,7 @@ void UMultiplayerSessionsSubsystem::CreateSession(const FSessionCreateParams& Pa
 		                         EOnlineDataAdvertisementType::ViaOnlineServiceAndPing);
 
 		if (const auto LocalPlayerNetID = GetWorld()->GetFirstLocalPlayerFromController()->GetPreferredUniqueNetId();
-			not SessionInterface->CreateSession(*LocalPlayerNetID, Params.SessionName, *LastSessionSettings))
+			not SessionInterface->CreateSession(*LocalPlayerNetID, NAME_GameSession, *LastSessionSettings))
 		{
 			SessionInterface->ClearOnCreateSessionCompleteDelegate_Handle(OnCreateSessionCompleteDelegateHandle);
 
